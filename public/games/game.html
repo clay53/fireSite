@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Clayton Does Things - Games</title>
+	<link rel="stylesheet" type="text/css" href="/styles.css">
+	<script src="/hf.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/4.8.2/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/4.8.2/firebase-firestore.js"></script>
+
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-113986935-1"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'UA-113986935-1');
+	</script>
+</head>
+<body onload="hf()">
+	<div>
+		<ul id="nav"></ul>
+
+		<h1 id="title"></h1>
+		<p id="desc"></p>
+		<h2 id="download" style="text-decoration: underline;">Downloads</h2>
+		<ul class="hlist" id="downloads"></ul>
+	</div>
+	<script src="./game.js"></script>
+</body>
+</html>

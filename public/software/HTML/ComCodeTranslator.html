@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script>
+  
+  function CTOCC (chr) {
+    if (chr.charCodeAt(0) == 32) {
+      return "-";
+    }
+    
+    var r = "";
+    
+    if (chr.charCodeAt(0) >= 65 && chr.charCodeAt(0) <= 90) {
+      r += "+";
+    }
+    
+    var x = chr.toLowerCase().charCodeAt(0);
+    while (x > 0) {
+      if (x >= 100) {
+        r += "!";
+        x -= 100;
+      } else if (x >= 10) {
+        r += ":";
+        x -= 10;
+      } else if (x >= 5) {
+        r += ",";
+        x -= 5;
+      } else if (x >= 1) {
+        r += ".";
+        x -= 1;
+      }
+    }
+    
+    return r;
+  }
+  
+  function TTOCC () {
+    var Text = document.getElementById("Text");
+    
+    var result = "";
+    
+    for (var i = 0; i < Text.value.length; i++) {
+      result += CTOCC (Text.value.charAt(i));
+      if (i != Text.value.length-1) {
+        result += " ";
+      }
+    }
+    
+    console.log (result);
+    document.getElementById("ComCode").value = result;
+  }
+  
+  function CCTOC (str) {
+    var x = 0;
+    
+    if (str == "-") {
+      return " "[0];
+    }
+    
+    for (var i = 0; i < str.length; i++) {
+      var chr = str.charAt(i);
+      if (chr == "+") {
+        x -= 32;
+      } else if (chr == "!") {
+        x += 100;
+      } else if (chr == ":") {
+        x += 10;
+      } else if (chr == ",") {
+        x += 5;
+      } else if (chr == ".") {
+        x += 1;
+      }
+    }
+    
+    return String.fromCharCode (x);
+  }
+  
+  function CCTOT () {
+    var result = "";
+    var ComCode= document.getElementById("ComCode");
+    var chars = ComCode.value.split(" ");
+    for (var i = 0; i < chars.length; i++) {
+      result += CCTOC (chars[i]);
+    }
+    document.getElementById("Text").value = result;
+  }
+</script>
+
+<style>
+ 
+body {
+  padding: 0;
+  margin: 0;
+}
+ 
+</style>
+</head>
+<body>
+  <p align="center">
+    <input placeholder="Text" id="Text">
+    <button id="TTOCC" onclick="TTOCC()">Text To ComCode</button><br>
+    <input placeholder="ComCode" id="ComCode">
+    <button id="CCTOT" onclick="CCTOT()">ComCode To Text</button>
+  </p>
+</body>
+</html>
