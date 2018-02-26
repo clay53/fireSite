@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | DemonicConquest</title>
+    <title>Clayton Does Things | DemonicConquest</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <script src="TemplateData/UnityProgress.js"></script>  
@@ -11,6 +11,8 @@
     <script>
       var gameInstance = UnityLoader.instantiate("gameContainer", "Build/Default WebGL.json", {onProgress: UnityProgress});
     </script>
+
+    <script src="/hf.js"></script>
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113986935-1"></script>
@@ -22,7 +24,8 @@
       gtag('config', 'UA-113986935-1');
     </script>
   </head>
-  <body>
+  <body onload="hf()">
+    <ul id="nav"></ul>
     <div class="webgl-content">
       <div id="gameContainer" style="width: 960px; height: 600px"></div>
       <div class="footer">
