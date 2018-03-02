@@ -35,13 +35,22 @@ body {
 <body onload="hf()">
 <ul id="nav"></ul>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.5/p5.min.js"></script>
+<script language="javascript" type="text/javascript" src="p5.sound.js"></script>
+<script src="../lib/p5.sound.js"></script>
 <script> 
+  var RevolverClick;
+  var HitMark;
+  function preload () {
+      soundFormats('mp3', 'ogg');
+      RevolverClick = loadSound('./RevolverClick.mp3');
+      HitMark = loadSound('./HitMark.mp3');
+  }
   function setup() {
-    createCanvas(windowWidth*0.9, windowHeight*0.9);
+    createCanvas(windowWidth, windowHeight);
   }
 
   function windowResized() {
-    resizeCanvas(windowWidth*0.9, windowHeight*0.9);
+    resizeCanvas(windowWidth, windowHeight);
   }
 
   function returnLarger (var1, var2) {
@@ -76,8 +85,9 @@ body {
   var spinL1 = 0;
   var spinL2 = 0;
   var rotation = 0;
-  var lastClock = 0;
+  var lastClick = 0;
   var kill = false;
+  var lastClock = 0;
   
   function draw () {
     var s = returnSmaller (windowWidth*0.9, windowHeight*0.9);
@@ -94,7 +104,7 @@ body {
     }
     background (255, 255, 255);
     push();
-    translate (windowWidth*0.9/2, windowHeight*0.9/2);
+    translate (windowWidth/2, windowHeight/2);
     noStroke();
     fill (150, 150, 150);
     ellipse (0, 0, s, s);
@@ -107,14 +117,25 @@ body {
     if (spinning) {
       if (rotation+15*((millis()-lastClock)/1000) <= PI*2/chambers.length*(spinL1+spinL2)) {
         rotation += 15*((millis()-lastClock)/1000);
+        if (PI*2/chambers.length*(spinL1+spinL2)/chambers.length >= rotation-lastClick) {
+            lastClick = rotation;
+            RevolverClick.setVolume(1);
+            RevolverClick.play();
+        }
       } else {
         rotation = PI*2/chambers.length*(spinL1+spinL2);
+        lastClick = rotation;
         spinning = false;
         console.log (spinL1);
         console.log ("landed on chamber " + chambers[spinL1] + " " + (spinL1));
         if (chambers[spinL1]) {
           console.log ("kill");
           kill = true;
+          HitMark.setVolume(5);
+          HitMark.play();
+        } else {
+            RevolverClick.setVolume(5);
+            RevolverClick.play();
         }
         chambers[spinL1] = false;
       }
