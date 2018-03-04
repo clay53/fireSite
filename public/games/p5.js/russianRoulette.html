@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script>
+            function redirect (url) {
+                console.log('redirecting to: ' + url);
+                document.location.replace(url);
+                console.log('redirected');
+            }
+        </script>
+    </head>
+    <body onload="redirect('./russianRoulette')">
+        <p>This is an old link - redirecting...</p>
+    </body>
+</html>
