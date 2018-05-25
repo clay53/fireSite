@@ -48,6 +48,10 @@ var pages = [
 	new page ({
 		name: "Shop",
 		url: "/shop"
+	}),
+	new page ({
+		name: "Clayton Does Apparel",
+		url: "/ClaytonDoesApparel"
 	})
 ];
 

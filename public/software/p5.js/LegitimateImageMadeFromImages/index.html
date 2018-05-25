@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+ 
+body {
+    padding: 0;
+    margin: 0;
+}
+ 
+</style>
+
+<title>Clayton Does Things - Software</title>
+<link rel="stylesheet" type="text/css" href="/styles.css">
+<script src="/hf.js"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-113986935-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-113986935-1');
+</script>
+</head>
+<body onload="hf()">
+<ul id="nav"></ul>
+<script src="https://github.com/processing/p5.js/releases/download/0.6.1/p5.min.js"></script>
+<script src="https://github.com/processing/p5.js/releases/download/0.6.1/p5.dom.js"></script>
+
+subSize: <input type="number" name="subSize" id="subSize" onchange="handleSettingsChange()" value="10" input/>
+<br/>
+pixelPerfect: <input type="checkbox" name="pixelPerfect" id="pixelPerfect" onchange="handleSettingsChange()" unchecked/>
+
+<br/>
+
+Target Image: <input type="file" name="targetImage" id="targetImage" onchange="handleTargetImageChange()">
+<br/>
+Source Images: <input type="file" name="sourceImages" id="sourceImages" onchange="handleSourceImagesChange()" multiple>
+<br/>
+Source Images (Folder): <input type="file" name="sourceImagesF" id="sourceImagesF" onchange="handleSourceImagesChange('sourceImagesF')" webkitdirectory multiple>
+<br/>
+<input type="text" id="return"/>
+<br/>
+
+<script>
+    function setup() {
+        var c = createCanvas(windowWidth, windowHeight);
+        frameRate(20000);
+    }
+    
+    function windowResized() {
+        //resizeCanvas(windowWidth, windowHeight);
+    }
+    
+    var targetImg = undefined;
+    var targetImgExists = false;
+    
+    var sourceImgs = [];
+    var sourceImgsG = []
+    var sourceImgsExist = false;
+    
+    var pixelPerfect = false;
+    
+    var subSize = 10;
+    
+    var drew = false;
+    var drawing = false;
+    var drawProgW = 0;
+    var drawProgH = 0;
+    
+    function handleSettingsChange() {
+        console.log("Changing settings...");
+        let newSubSize = parseInt(document.getElementById("subSize").value);
+        console.log("newSubSize = " + newSubSize);
+        if (newSubSize < 0 || isNaN(newSubSize)) {
+            console.log("newSubSize is not valid... Aborting settings change");
+            return;
+        }
+        let newPixelPerfect = document.getElementById("pixelPerfect").checked;
+        console.log("newPixelPerfect = " + newPixelPerfect);
+
+        targetImg = undefined;
+        targetImgExists = false;
+        
+        sourceImgs = [];
+        sourceImgsG = []
+        sourceImgsExist = false;
+        
+        pixelPerfect = newPixelPerfect;
+        
+        subSize = newSubSize;
+        
+        drew = false;
+        drawing = false;
+        drawProgW = 0;
+        drawProgH = 0;
+    }
+
+    function resizeWindow() {
+        console.log((pixelPerfect ? targetImg.width*2*subSize : targetImg.width*2));
+        console.log(width);
+        resizeCanvas((pixelPerfect ? targetImg.width*2*subSize : targetImg.width*2), (pixelPerfect ? targetImg.height*subSize : targetImg.height));
+    }
+    
+    function handleTargetImageChange() {
+        for (var i = 0 ; i < document.getElementById("targetImage").files.length; i++) {
+            var f = document.getElementById("targetImage").files[i];
+            var fNSplit = f.name.split('.');
+            console.log("fNSplit: " + fNSplit);
+            var extension = fNSplit[fNSplit.length-1].toLowerCase();
+            console.log("Extension: " + extension)
+            if (
+                extension === "jpg" ||
+                extension === "jpeg" ||
+                extension === "svg" ||
+                extension === "png" ||
+                extension === "webp"
+            ) {
+                console.log(f.name);
+                console.log(f.size);
+                var reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => {
+                    console.log(reader.result);
+                    targetImg = loadImage(reader.result);
+                    targetImgExists = true;
+                    drawing = false;
+                    drew = false;
+                }
+            } else {
+                document.getElementById("return").value = "Invalid image type";
+            }
+        }
+    }
+    
+    function handleSourceImagesChange(eId = "sourceImages") {
+        if (document.getElementById(eId).files.length > 1) {
+            print (document.getElementById(eId).files);
+        }
+        var results = [];
+        for (var i = 0 ; i < document.getElementById(eId).files.length; i++) {
+            var f = document.getElementById(eId).files[i];
+            var fNSplit = f.name.split('.');
+            console.log("fNSplit: " + fNSplit);
+            var extension = fNSplit[fNSplit.length-1].toLowerCase();
+            console.log("Extension: " + extension)
+            if (
+                extension === "jpg" ||
+                extension === "jpeg" ||
+                extension === "svg" ||
+                extension === "png" ||
+                extension === "webp"
+            ) {
+                console.log(f.name);
+                console.log(f.size);
+                var reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = function (e) {
+                    var result = loadImage(e.target.result);
+                    
+                    sourceImgs.push({
+                        image: result,
+                        cropped: false
+                    });
+                    sourceImgsExist = sourceImgs.length > 0 ? true : false;
+                }
+            } else {
+                document.getElementById("return").value = "Invalid image type";
+            }
+        }
+    }
+  
+    function draw () {
+        push();
+        if (sourceImgsExist) {
+            for (var i = 0; i < sourceImgs.length; i++) {
+                if (!sourceImgs[i].rendered && sourceImgs[i].image.width > 1) {
+                    var result = sourceImgs[i].image;
+                    var w = result.width < result.height ? result.width : result.height;
+                    var h = result.height < result.width ? result.height : result.width;
+                    console.log("Pre-crop")
+                    console.log(result);
+                    console.log("width");
+                    console.log(w);
+                    result = result.get(0, 0, w, h);
+                    console.log("pre-resize");
+                    console.log(result);
+                    result.resize(subSize, subSize);
+                    console.log("final");
+                    console.log(result);
+                    console.log("getting color avg");
+                    var colorAvgR = 0;
+                    var colorAvgG = 0;
+                    var colorAvgB = 0;
+                    for (var j = 0; j < result.width; j++) {
+                        for (var k = 0; k < result.height; k++) {
+                            var c = result.get(j, k);
+                            var a = c[3]/255;
+                            colorAvgR += 255-(255-c[0])*a;
+                            colorAvgG += 255-(255-c[1])*a;
+                            colorAvgB += 255-(255-c[2])*a;
+                        }
+                    }
+                    colorAvgR = Math.round(colorAvgR/(result.width*result.height));
+                    colorAvgG = Math.round(colorAvgG/(result.width*result.height));
+                    colorAvgB = Math.round(colorAvgB/(result.width*result.height));
+                    console.log(colorAvgR);
+                    console.log(colorAvgG);
+                    console.log(colorAvgB);
+                    sourceImgs[i] = {
+                        image: result,
+                        rendered: true,
+                        cAR: colorAvgR,
+                        cAG: colorAvgG,
+                        cAB: colorAvgB
+                    };
+                    sourceImgsG.push(sourceImgs[i]);
+                    drawing = false;
+                    drew = false;
+                }
+            }
+        }
+        
+        if (targetImgExists ? (targetImg.width > 1 && (pixelPerfect ? targetImg.width*2*subSize : targetImg.width*2) !== width) : false) {
+            //scale(targetImg.width*2 > targetImg.height ? windowWidth/(targetImg.width*2) : windowHeight/targetImg.height);
+            resizeWindow();
+        }
+        if (!drawing && !drew) {
+            drawProgW = 0;
+            drawProgH = 0;
+            background(255);
+            if (targetImgExists) {
+                image(targetImg, 0, 0, (pixelPerfect ? targetImg.width*subSize : targetImg.width), (pixelPerfect ? targetImg.height*subSize : targetImg.height));
+            }
+        }
+        
+        if (sourceImgsG.length > 0 && (targetImgExists ? targetImg.width > 1 : false) && !drew) {
+            drawing = true;
+            var t = targetImg;
+            translate((pixelPerfect ? t.width*subSize : t.width), 0);
+            // for (var i = 0; i+subSize <= t.width; i+=subSize) {
+            //     for (var j = 0; j+subSize <= t.height; j+=subSize) {
+            // for (var i = 0; i < t.width; i+=subSize) {
+            if (drawProgW < t.width) {
+                var i = drawProgW;
+                // for (var j = 0; j < t.height; j+=subSize) {
+                if (drawProgH < t.height) {
+                    var j = drawProgH;
+                    // var cS = t.get(i, j, i+subSize, j+subSize);
+                    // var cR;
+                    // var cG;
+                    // var cB;
+                    // for (var f = 0; f < cS.width; f++) {
+                    //     for (var h = 0; h < cS.height; h++) {
+                    //         var c = cS.get(f, h);
+                    //         cR += c[0];
+                    //         cG += c[1];
+                    //         cB += c[2];
+                    //     }
+                    // }
+                    // cR = Math.round(cR/(cS.width*cS.height));
+                    // cG = Math.round(cG/(cS.width*cS.height));
+                    // cB = Math.round(cB/(cS.width*cS.height));
+                    
+                    var c = t.get(i, j);
+                    var cA = c[3]/255;
+                    var cR = 255-(255-c[0])*cA;
+                    var cG = 255-(255-c[1])*cA;
+                    var cB = 255-(255-c[2])*cA;
+                    
+                    var cRD = 255;
+                    var cGD = 255;
+                    var cBD = 255;
+                    var cD = 255*3;
+                    var closestImg;
+                    for (var k = 0; k < sourceImgsG.length; k++) {
+                        var s = sourceImgsG[k];
+                        if ((Math.abs(cR-s.cAR)+Math.abs(cG-s.cAG)+Math.abs(cB-s.cAB)) <= cD) {
+                            cRD = Math.abs(cR-s.cAR);
+                            cGD = Math.abs(cG-s.cAG);
+                            cBD = Math.abs(cB-s.cAB)
+                            cD = cRD+cGD+cBD;
+                            closestImg = s.image;
+                        }
+                    }
+                    image(closestImg, (pixelPerfect ? i*subSize : i), (pixelPerfect ? j*subSize : j));
+                    drawProgH += (pixelPerfect ? 1 : subSize);
+                } else {
+                    drawProgW += (pixelPerfect ? 1 : subSize);
+                    drawProgH = 0;
+                }
+            } else {
+                drew = false;
+            }
+        }
+        pop();
+    }
+</script>
+</body>
+</html>
